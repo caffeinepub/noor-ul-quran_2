@@ -1,0 +1,86 @@
+@import url("https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.625rem;
+
+    /* Page background: #EEF3F2 */
+    --background: 0.953 0.009 168;
+    --foreground: 0.15 0 0;
+
+    /* Cards: white */
+    --card: 1 0 0;
+    --card-foreground: 0.15 0 0;
+
+    --popover: 1 0 0;
+    --popover-foreground: 0.15 0 0;
+
+    /* Primary green: #198754 */
+    --primary: 0.52 0.14 150;
+    --primary-foreground: 1 0 0;
+
+    --secondary: 0.95 0.01 160;
+    --secondary-foreground: 0.15 0 0;
+
+    /* Muted: light green-gray */
+    --muted: 0.95 0.01 160;
+    --muted-foreground: 0.47 0.01 220;
+
+    /* Active highlight mint: #DDEFE5 */
+    --accent: 0.92 0.03 159;
+    --accent-foreground: 0.15 0 0;
+
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 1 0 0;
+
+    --border: 0.88 0.015 165;
+    --input: 0.88 0.015 165;
+    --ring: 0.52 0.14 150;
+
+    --chart-1: 0.52 0.14 150;
+    --chart-2: 0.6 0.118 184;
+    --chart-3: 0.398 0.07 227;
+    --chart-4: 0.828 0.189 84;
+    --chart-5: 0.769 0.188 70;
+
+    /* Sidebar: white */
+    --sidebar: 1 0 0;
+    --sidebar-foreground: 0.15 0 0;
+    --sidebar-primary: 0.52 0.14 150;
+    --sidebar-primary-foreground: 1 0 0;
+    --sidebar-accent: 0.9 0.04 155;
+    --sidebar-accent-foreground: 0.15 0 0;
+    --sidebar-border: 0.88 0.015 165;
+    --sidebar-ring: 0.52 0.14 150;
+
+    /* Custom tokens */
+    --header-from: 0.5 0.09 175;
+    --header-to: 0.52 0.12 149;
+    --footer-bg: 0.18 0.03 160;
+    --active-mint: 0.92 0.03 159;
+    --active-sidebar: 0.9 0.04 155;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "General Sans", "Segoe UI", sans-serif;
+  }
+
+  .font-arabic {
+    font-family: "Amiri", serif;
+    direction: rtl;
+  }
+
+  .font-urdu {
+    font-family: "Noto Nastaliq Urdu", serif;
+    direction: rtl;
+  }
+}
