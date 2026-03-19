@@ -10,6 +10,123 @@ import { useGetAllSurahs, useGetAyahsForSurah } from "./hooks/useQueries";
 
 const queryClient = new QueryClient();
 
+const SURAH_AUDIO_URLS: Record<number, string> = {
+  1: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/001-Al-Fatihah-The-Opening-سورة-الفاتحة.mp3",
+  2: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/002-Al-Baqarah-The-Cow-سورة-البقرة.mp3",
+  3: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/003-Al-Imran-The-Family-of-Imran-سورة-آل-عمران.mp3",
+  4: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/004-An-Nisa-The-Women-سورة-النساء.mp3",
+  5: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/005-Al-Maidah-The-Table-spread-with-Food-سورة-المائدة.mp3",
+  6: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/006-Al-Anam-The-Cattle-سورة-الأنعام.mp3",
+  7: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/007-Al-Araf-The-Heights-سورة-الأعراف.mp3",
+  8: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/008-Al-Anfal-The-Spoils-of-War-سورة-الأنفال.mp3",
+  9: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/009-At-Taubah-The-Repentance-سورة-التوبة.mp3",
+  10: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/010-Yunus-Jonah-سورة-يونس.mp3",
+  11: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/011-Hud-سورة-هود.mp3",
+  12: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/012-Yusuf-Joseph-سورة-يوسف.mp3",
+  13: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/013-Ar-Rad-The-Thunder-سورة-الرعد.mp3",
+  14: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/014-Ibrahim-Abraham-سورة-إبراهيم.mp3",
+  15: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/015-Al-Hijr-The-Rocky-Tract-سورة-الحجر.mp3",
+  16: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/016-An-Nahl-The-Bees-سورة-النحل.mp3",
+  17: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/017-Al-Isra-The-Night-Journey-سورة-الإسراء.mp3",
+  18: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/018-Al-Kahf-The-Cave-سورة-الكهف.mp3",
+  19: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/019-Maryam-Mary-سورة-مريم.mp3",
+  20: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/020-Taha-سورة-طه.mp3",
+  21: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/021-Al-Anbiya-The-Prophets-سورة-الأنبياء.mp3",
+  22: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/022-Al-Hajj-The-Pilgrimage-سورة-الحج.mp3",
+  23: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/023-Al-Muminoon-The-Believers-سورة-المؤمنون.mp3",
+  24: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/024-An-Noor-The-Light-سورة-النور.mp3",
+  25: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/025-Al-furqantheCriterion-.mp3",
+  26: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/026-Ash-Shuara-The-Poets-سورة-الشعراء.mp3",
+  27: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/027-An-Naml-The-Ants-سورة-النمل.mp3",
+  28: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/028-Al-Qasas-The-Stories-سورة-القصص.mp3",
+  29: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/029-Al-Ankaboot-The-Spider-سورة-العنكبوت.mp3",
+  30: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/030-Ar-Room-The-Romans-سورة-الروم.mp3",
+  31: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/031-Luqman-سورة-لقمان.mp3",
+  32: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/032-As-Sajdah-The-Prostration-سورة-السجدة.mp3",
+  33: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/033-Al-Ahzab-The-Combined-Forces-سورة-الأحزاب.mp3",
+  34: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/034-Saba-Sheba-سورة-سبأ.mp3",
+  35: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/035-Fatir-The-Orignator-سورة-فاطر.mp3",
+  36: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/036-Ya-seen-سورة-يس.mp3",
+  37: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/037-As-Saaffat-Those-Ranges-in-Ranks-سورة-الصافات.mp3",
+  38: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/038-Sad-The-Letter-Sad-سورة-ص.mp3",
+  39: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/039-Az-Zumar-The-Groups-سورة-الزمر.mp3",
+  40: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/040-Ghafir-The-Forgiver-God-سورة-غافر.mp3",
+  41: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/041-Fussilat-Explained-in-Detail-سورة-فصلت.mp3",
+  42: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/042-Ash-Shura-Consultation-سورة-الشورى.mp3",
+  43: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/043-Az-Zukhruf-The-Gold-Adornment-سورة-الزخرف.mp3",
+  44: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/044-Ad-Dukhan-The-Smoke-سورة-الدخان.mp3",
+  45: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/045-Al-Jathiya-Crouching-سورة-الجاثية.mp3",
+  46: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/046-Al-Ahqaf-The-Curved-Sand-hills-سورة-الأحقاف.mp3",
+  47: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/047-Muhammad-سورة-محمد.mp3",
+  48: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/048-Al-Fath-The-Victory-سورة-الفتح.mp3",
+  49: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/049-Al-Hujurat-The-Dwellings-سورة-الحجرات.mp3",
+  50: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/050-Qaf-The-Letter-Qaf-سورة-ق.mp3",
+  51: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/051-Adh-Dhariyat-The-Wind-that-Scatter-سورة-الذاريات.mp3",
+  52: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/052-At-Tur-The-Mount-سورة-الطور.mp3",
+  53: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/053-An-Najm-The-Star-سورة-النجم.mp3",
+  54: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/054-Al-Qamar-The-Moon-سورة-القمر.mp3",
+  55: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/055-Ar-Rahman-The-Most-Graciouse-سورة-الرحمن.mp3",
+  56: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/056-Al-Waqiah-The-Event-سورة-الواقعة.mp3",
+  57: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/057-Al-Hadid-The-Iron-سورة-الحديد.mp3",
+  58: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/058-Al-Mujadilah-She-That-Disputeth-سورة-المجادلة.mp3",
+  59: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/059-Al-Hashr-The-Gathering-سورة-الحشر.mp3",
+  60: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/060-Al-Mumtahanah-The-Woman-to-be-examined-سورة-الممتحنة.mp3",
+  61: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/061-As-Saff-The-Row-سورة-الصف.mp3",
+  62: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/062-Al-Jumuah-Friday-سورة-الجمعة.mp3",
+  63: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/063-Al-Munafiqoon-The-Hypocrites-سورة-المنافقون.mp3",
+  64: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/064-At-Taghabun-Mutual-Loss-Gain-سورة-التغابن.mp3",
+  65: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/065-At-Talaq-The-Divorce-سورة-الطلاق.mp3",
+  66: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/066-At-Tahrim-The-Prohibition-سورة-التحريم.mp3",
+  67: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/067-Al-Mulk-Dominion-سورة-الملك.mp3",
+  68: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/068-Al-Qalam-The-Pen-سورة-القلم.mp3",
+  69: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/069-Al-Haaqqah-The-Inevitable-سورة-الحاقة.mp3",
+  70: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/070-Al-Maarij-The-Ways-of-Ascent-سورة-المعارج.mp3",
+  71: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/071-Nooh-سورة-نوح.mp3",
+  72: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/072-Al-Jinn-The-Jinn-سورة-الجن.mp3",
+  73: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/073-Al-Muzzammil-The-One-wrapped-in-Garments-سورة-المزمل.mp3",
+  74: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/074-Al-Muddaththir-The-One-Enveloped-سورة-المدثر.mp3",
+  75: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/075-Al-Qiyamah-The-Resurrection-سورة-القيامة.mp3",
+  76: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/076-Al-Insan-Man-سورة-الإنسان.mp3",
+  77: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/077-Al-Mursalat-Those-sent-forth-سورة-المرسلات.mp3",
+  78: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/078-An-Naba-The-Great-News-سورة-النبأ.mp3",
+  79: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/079-An-Naziat-Those-who-Pull-Out-سورة-النازعات.mp3",
+  80: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/080-Abasa-He-frowned-سورة-عبس.mp3",
+  81: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/081-At-Takwir-The-Overthrowing-سورة-التكوير.mp3",
+  82: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/082-Al-Infitar-The-Cleaving-سورة-الانفطار.mp3",
+  83: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/083-Al-Mutaffifin-Those-Who-Deal-in-Fraud-سورة-المطففين.mp3",
+  84: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/084-Al-Inshiqaq-The-Splitting-Asunder-سورة-الانشقاق.mp3",
+  85: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/085-Al-buroojTheBigStars-.mp3",
+  86: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/086-At-Tariq-The-Night-Comer-سورة-الطارق.mp3",
+  87: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/087-Al-Ala-The-Most-High-سورة-الأعلى.mp3",
+  88: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/088-Al-Ghashiya-The-Overwhelming-سورة-الغاشية.mp3",
+  89: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/089-Al-Fajr-The-Dawn-سورة-الفجر.mp3",
+  90: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/090-Al-Balad-The-City-سورة-البلد.mp3",
+  91: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/091-Ash-Shams-The-Sun-سورة-الشمس.mp3",
+  92: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/092-Al-Layl-The-Night-سورة-الليل.mp3",
+  93: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/093-Ad-Dhuha-The-Forenoon-سورة-الضحى.mp3",
+  94: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/094-As-Sharh-The-Opening-Forth-سورة-الشرح.mp3",
+  95: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/095-At-Tin-The-Fig-سورة-التين.mp3",
+  96: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/096-Al-alaq-The-Clot-سورة-العلق.mp3",
+  97: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/097-Al-Qadr-The-Night-of-Decree-سورة-القدر.mp3",
+  98: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/098-Al-Bayyinah-The-Clear-Evidence-سورة-البينة.mp3",
+  99: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/099-Az-Zalzalah-The-Earthquake-سورة-الزلزلة.mp3",
+  100: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/100-Al-adiyat-Those-That-Run-سورة-العاديات.mp3",
+  101: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/101-Al-Qariah-The-Striking-Hour-سورة-القارعة.mp3",
+  102: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/102-At-Takathur-The-piling-Up-سورة-التكاثر.mp3",
+  103: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/103-Al-Asr-The-Time-سورة-العصر.mp3",
+  104: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/104-Al-Humazah-The-Slanderer-سورة-الهمزة.mp3",
+  105: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/105-Al-Fil-The-Elephant-سورة-الفيل.mp3",
+  106: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/106-Quraish-سورة-قريش.mp3",
+  107: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/107-Al-Maun-Small-Kindnesses-سورة-الماعون.mp3",
+  108: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/108-Al-Kauthor-A-River-in-Paradise-سورة-الكوثر.mp3",
+  109: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/109-Al-Kafiroon-The-Disbelievers-سورة-الكافرون.mp3",
+  110: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/110-An-Nasr-The-Help-سورة-النصر.mp3",
+  111: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/111-Al-Masad-The-Palm-Fibre-سورة-المسد.mp3",
+  112: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/112-Al-Ikhlas-Sincerity-سورة-الإخلاص.mp3",
+  113: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/113-Al-Falaq-The-Daybreak-سورة-الفلق.mp3",
+  114: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/114-An-Nas-Mankind-سورة-الناس.mp3",
+};
+
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds)) return "0:00";
   const m = Math.floor(seconds / 60);
@@ -164,9 +281,9 @@ function AudioPlayer({
       {/* Reciter */}
       <div className="hidden md:flex flex-col items-end flex-shrink-0">
         <span className="text-xs font-medium text-foreground">
-          Sheikh Al-Afasy
+          Emaan Library
         </span>
-        <span className="text-xs text-muted-foreground">Reciter</span>
+        <span className="text-xs text-muted-foreground">Urdu Translation</span>
       </div>
     </div>
   );
@@ -303,7 +420,7 @@ function AppContent() {
       String(Number(s.number)).includes(searchQuery),
   );
 
-  const audioUrl = `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${selectedSurahNum}.mp3`;
+  const audioUrl = SURAH_AUDIO_URLS[selectedSurahNum] ?? SURAH_AUDIO_URLS[1];
 
   const handleSelectSurah = (num: number) => {
     setSelectedSurahNum(num);
