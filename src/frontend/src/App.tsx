@@ -455,7 +455,7 @@ function AyahCard({
         {/* Urdu translation */}
         <p
           className="font-urdu text-right text-muted-foreground"
-          style={{ fontSize: "0.75rem", lineHeight: "1.7rem" }}
+          style={{ fontSize: "0.65rem", lineHeight: "1.4rem" }}
           dir="rtl"
         >
           {ayah.urduTranslation}
