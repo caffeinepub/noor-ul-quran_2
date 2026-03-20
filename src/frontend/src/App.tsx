@@ -138,7 +138,7 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-// ─── Audio Player ─────────────────────────────────────────────────────────────────────────────
+// ─── Audio Player ──────────────────────────────────────────────────────────────
 interface AudioPlayerProps {
   audioUrl: string;
   surahName: string;
@@ -158,7 +158,6 @@ function AudioPlayer({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
 
-  // Reset state when surah changes
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on audioUrl change
   useEffect(() => {
     setIsPlaying(false);
@@ -171,7 +170,6 @@ function AudioPlayer({
     if (!audio) return;
     const t = audio.currentTime;
     setCurrentTime(t);
-
     if (ayahs.length === 0) return;
     let activeIdx = 0;
     for (let i = 0; i < ayahs.length; i++) {
@@ -214,7 +212,7 @@ function AudioPlayer({
   return (
     <div
       data-ocid="player.panel"
-      className="bg-card shadow-player border border-border rounded-xl mx-4 my-3 px-5 py-4 flex items-center gap-5"
+      className="bg-card border border-border rounded-xl mx-4 my-2 px-4 py-3 flex items-center gap-4"
     >
       {/* biome-ignore lint/a11y/useMediaCaption: Quran audio — captions not applicable */}
       <audio
@@ -230,22 +228,22 @@ function AudioPlayer({
         data-ocid="player.toggle"
         onClick={togglePlay}
         type="button"
-        className="flex-shrink-0 w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
+        className="flex-shrink-0 w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
         aria-label={isPlaying ? "Pause" : "Play"}
       >
-        {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+        {isPlaying ? <Pause size={16} /> : <Play size={16} />}
       </button>
 
       {/* Surah name + progress */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground truncate mb-1">
+        <p className="text-xs font-semibold text-foreground truncate mb-1">
           {surahName}
         </p>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground w-10 text-right">
+          <span className="text-xs text-muted-foreground w-9 text-right">
             {formatTime(currentTime)}
           </span>
-          <div className="relative flex-1 h-2 bg-border rounded-full overflow-hidden">
+          <div className="relative flex-1 h-1.5 bg-border rounded-full overflow-hidden">
             <div
               className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all"
               style={{ width: `${progress}%` }}
@@ -261,7 +259,7 @@ function AudioPlayer({
               aria-label="Seek"
             />
           </div>
-          <span className="text-xs text-muted-foreground w-10">
+          <span className="text-xs text-muted-foreground w-9">
             {formatTime(duration)}
           </span>
         </div>
@@ -269,7 +267,7 @@ function AudioPlayer({
 
       {/* Volume */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        <Volume2 size={16} className="text-muted-foreground" />
+        <Volume2 size={14} className="text-muted-foreground" />
         <input
           type="range"
           min={0}
@@ -277,7 +275,7 @@ function AudioPlayer({
           step={0.05}
           value={volume}
           onChange={handleVolume}
-          className="w-20 accent-primary cursor-pointer"
+          className="w-16 accent-primary cursor-pointer"
           aria-label="Volume"
         />
       </div>
@@ -293,7 +291,7 @@ function AudioPlayer({
   );
 }
 
-// ─── Surah List Item ──────────────────────────────────────────────────────────────────────────────
+// ─── Surah List Item ──────────────────────────────────────────────────────────
 interface SurahItemProps {
   surah: SurahMeta;
   isActive: boolean;
@@ -307,14 +305,14 @@ function SurahItem({ surah, isActive, index, onClick }: SurahItemProps) {
       type="button"
       data-ocid={`surah.item.${index}`}
       onClick={onClick}
-      className={`w-full text-left px-3 py-2 flex items-center gap-2 transition-colors border-l-4 ${
+      className={`w-full text-left px-2.5 py-1.5 flex items-center gap-2 transition-colors border-l-2 ${
         isActive
-          ? "bg-quran-sidebar-active border-l-primary"
-          : "border-l-transparent hover:bg-accent"
+          ? "bg-accent border-l-primary"
+          : "border-l-transparent hover:bg-accent/50"
       }`}
     >
       <span
-        className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+        className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
           isActive
             ? "bg-primary text-primary-foreground"
             : "bg-muted text-muted-foreground"
@@ -323,21 +321,25 @@ function SurahItem({ surah, isActive, index, onClick }: SurahItemProps) {
         {surah.number}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="font-arabic text-sm leading-tight text-foreground">
+        <p
+          className={`font-arabic leading-tight text-[13px] ${
+            isActive ? "text-foreground font-bold" : "text-foreground"
+          }`}
+        >
           {surah.arabicName}
         </p>
-        <p className="text-xs text-muted-foreground truncate">
+        <p className="text-[10px] text-muted-foreground truncate">
           {surah.transliteration}
         </p>
       </div>
-      <span className="text-xs text-muted-foreground flex-shrink-0">
+      <span className="text-[10px] text-muted-foreground flex-shrink-0">
         {surah.ayahCount}
       </span>
     </button>
   );
 }
 
-// ─── Ayah Card ──────────────────────────────────────────────────────────────────────────────────
+// ─── Ayah Card ────────────────────────────────────────────────────────────────
 interface AyahCardProps {
   ayah: Ayah;
   isActive: boolean;
@@ -359,17 +361,17 @@ function AyahCard({ ayah, isActive, index }: AyahCardProps) {
       data-ocid={`ayah.item.${index}`}
       layout
       transition={{ duration: 0.2 }}
-      className={`relative rounded-xl border transition-all duration-300 ${
+      className={`relative rounded-lg border transition-all duration-300 ${
         isActive
-          ? "bg-quran-mint border-primary border-l-4 shadow-sm"
-          : "bg-card border-border hover:border-primary/30"
+          ? "bg-accent border-primary/40 border-l-4 border-l-primary shadow-sm"
+          : "bg-card border-border hover:border-primary/20 hover:bg-accent/30"
       }`}
     >
-      <div className="p-5">
-        {/* Ayah number badge */}
-        <div className="flex items-start mb-4">
+      <div className="px-4 py-3">
+        {/* Header row: ayah number badge left-aligned */}
+        <div className="flex items-center justify-between mb-2">
           <span
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
               isActive
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground"
@@ -377,21 +379,33 @@ function AyahCard({ ayah, isActive, index }: AyahCardProps) {
           >
             {Number(ayah.number)}
           </span>
+          {isActive && (
+            <span className="text-[10px] font-medium text-primary uppercase tracking-wide">
+              در حال پخش
+            </span>
+          )}
         </div>
 
         {/* Arabic text */}
         <p
-          className="font-arabic text-right leading-loose mb-4 text-foreground"
-          style={{ fontSize: "2rem", lineHeight: "2.8rem" }}
+          className="font-arabic text-right text-foreground mb-2"
+          style={{ fontSize: "1.1rem", lineHeight: "2rem" }}
           dir="rtl"
         >
           {ayah.arabicText}
         </p>
 
+        {/* Divider */}
+        <div
+          className={`border-t mb-2 ${
+            isActive ? "border-primary/20" : "border-border"
+          }`}
+        />
+
         {/* Urdu translation */}
         <p
-          className="font-urdu text-right text-muted-foreground leading-loose"
-          style={{ fontSize: "1.1rem", lineHeight: "2.4rem" }}
+          className="font-urdu text-right text-muted-foreground"
+          style={{ fontSize: "0.75rem", lineHeight: "1.7rem" }}
           dir="rtl"
         >
           {ayah.urduTranslation}
@@ -401,7 +415,7 @@ function AyahCard({ ayah, isActive, index }: AyahCardProps) {
   );
 }
 
-// ─── Main App Content ─────────────────────────────────────────────────────────────────────────────
+// ─── Main App Content ─────────────────────────────────────────────────────────
 function AppContent() {
   const [selectedSurahNum, setSelectedSurahNum] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -440,29 +454,29 @@ function AppContent() {
           background:
             "linear-gradient(90deg, oklch(0.50 0.09 175), oklch(0.52 0.12 149))",
         }}
-        className="flex items-center justify-between px-6 py-4 flex-shrink-0"
+        className="flex items-center justify-between px-5 py-3 flex-shrink-0"
       >
         <div className="flex items-center gap-3">
-          <Moon size={28} className="text-white opacity-90" />
+          <Moon size={24} className="text-white opacity-90" />
           <div>
-            <h1 className="text-white font-bold text-xl leading-none">
+            <h1 className="text-white font-bold text-lg leading-none">
               Noor-ul-Quran
             </h1>
             <p className="text-white/70 text-xs mt-0.5">نور القرآن</p>
           </div>
         </div>
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-5">
           <button
             type="button"
             data-ocid="nav.link"
-            className="text-white/80 hover:text-white text-sm transition-colors"
+            className="text-white/80 hover:text-white text-xs transition-colors"
           >
             Home
           </button>
           <button
             type="button"
             data-ocid="nav.link"
-            className="text-white/80 hover:text-white text-sm transition-colors"
+            className="text-white/80 hover:text-white text-xs transition-colors"
             onClick={() => handleSelectSurah(1)}
           >
             Al-Fatihah
@@ -470,7 +484,7 @@ function AppContent() {
           <button
             type="button"
             data-ocid="nav.link"
-            className="text-white/80 hover:text-white text-sm transition-colors"
+            className="text-white/80 hover:text-white text-xs transition-colors"
           >
             About
           </button>
@@ -494,27 +508,25 @@ function AppContent() {
       {/* Two-column layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-56 flex-shrink-0 bg-card border-r border-border flex flex-col">
+        <aside className="w-52 flex-shrink-0 bg-card border-r border-border flex flex-col">
           {/* Search */}
-          <div className="p-3 border-b border-border">
-            <div className="flex items-center gap-2">
+          <div className="px-2.5 py-2 border-b border-border">
+            <div className="flex items-center gap-1.5">
               <div className="relative flex-1">
                 <Search
-                  size={15}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  size={12}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
                 />
                 <Input
                   data-ocid="surah.search_input"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search surahs..."
-                  className="pl-9 h-8 text-xs bg-background"
+                  className="pl-7 h-7 text-xs bg-background"
                 />
               </div>
-              <p className="flex-shrink-0 text-xs text-muted-foreground whitespace-nowrap">
-                {surahsLoading
-                  ? "Loading..."
-                  : `${filteredSurahs.length} Surahs`}
+              <p className="flex-shrink-0 text-[10px] text-muted-foreground whitespace-nowrap">
+                {surahsLoading ? "..." : `${filteredSurahs.length}`}
               </p>
             </div>
           </div>
@@ -534,7 +546,7 @@ function AppContent() {
               {filteredSurahs.length === 0 && (
                 <div
                   data-ocid="surah.empty_state"
-                  className="p-6 text-center text-muted-foreground text-sm"
+                  className="p-6 text-center text-muted-foreground text-xs"
                 >
                   No surahs found
                 </div>
@@ -552,20 +564,20 @@ function AppContent() {
                 background:
                   "linear-gradient(135deg, oklch(0.50 0.09 175 / 0.08), oklch(0.52 0.12 149 / 0.05))",
               }}
-              className="px-8 py-5 border-b border-border flex-shrink-0 text-center"
+              className="px-6 py-3 border-b border-border flex-shrink-0 text-center"
             >
               <p
-                className="font-arabic text-4xl font-bold text-foreground"
+                className="font-arabic text-3xl font-bold text-foreground"
                 dir="rtl"
               >
                 {selectedSurah.arabicName}
               </p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {selectedSurah.transliteration} · {selectedSurah.ayahCount}{" "}
                 Ayahs
               </p>
               <p
-                className="font-urdu text-lg text-muted-foreground mt-1"
+                className="font-urdu text-sm text-muted-foreground mt-0.5"
                 dir="rtl"
               >
                 {selectedSurah.urduName}
@@ -575,23 +587,23 @@ function AppContent() {
 
           {/* Ayahs */}
           <ScrollArea className="flex-1">
-            <div className="px-6 py-5 space-y-4 max-w-3xl mx-auto">
+            <div className="px-4 py-4 space-y-3 max-w-2xl mx-auto">
               {ayahsLoading ? (
-                <div data-ocid="ayah.loading_state" className="space-y-4">
+                <div data-ocid="ayah.loading_state" className="space-y-3">
                   {Array.from({ length: 7 }).map((_, i) => (
                     // biome-ignore lint/suspicious/noArrayIndexKey: skeleton list
-                    <Skeleton key={i} className="h-40 w-full rounded-xl" />
+                    <Skeleton key={i} className="h-32 w-full rounded-lg" />
                   ))}
                 </div>
               ) : (
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={selectedSurahNum}
-                    initial={{ opacity: 0, y: 12 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.25 }}
-                    className="space-y-4"
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-3"
                   >
                     {ayahs.map((ayah, idx) => (
                       <AyahCard
@@ -620,14 +632,16 @@ function AppContent() {
       {/* Footer */}
       <footer
         style={{ background: "oklch(var(--footer-bg))" }}
-        className="flex-shrink-0 py-5 px-6"
+        className="flex-shrink-0 py-4 px-6"
       >
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Moon size={18} className="text-white/60" />
-            <span className="text-white font-semibold">Noor-ul-Quran</span>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Moon size={16} className="text-white/60" />
+            <span className="text-white font-semibold text-sm">
+              Noor-ul-Quran
+            </span>
           </div>
-          <div className="border-t border-white/10 pt-3">
+          <div className="border-t border-white/10 pt-2">
             <p className="text-center text-white/50 text-xs">
               © {new Date().getFullYear()} Noor-ul-Quran | Powered by Nellore
               Print Hub Magic Advertising
