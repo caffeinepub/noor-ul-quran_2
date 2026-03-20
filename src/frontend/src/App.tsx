@@ -5,10 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Moon, Pause, Play, Search, Volume2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Ayah, Surah } from "./backend.d";
-import { useGetAllSurahs, useGetAyahsForSurah } from "./hooks/useQueries";
+import type { Ayah } from "./backend.d";
+import { SURAHS } from "./data/surahs";
+import { useGetAyahsForSurah } from "./hooks/useQuranApi";
 
 const queryClient = new QueryClient();
+
+// Use SurahMeta shape compatible with the UI
+type SurahMeta = (typeof SURAHS)[0];
 
 const SURAH_AUDIO_URLS: Record<number, string> = {
   1: "https://www.emaanlibrary.com/wp-content/uploads/2018/04/001-Al-Fatihah-The-Opening-سورة-الفاتحة.mp3",
@@ -134,7 +138,7 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-// ─── Audio Player ────────────────────────────────────────────────────────────
+// ─── Audio Player ─────────────────────────────────────────────────────────────────────────────
 interface AudioPlayerProps {
   audioUrl: string;
   surahName: string;
@@ -289,9 +293,9 @@ function AudioPlayer({
   );
 }
 
-// ─── Surah List Item ──────────────────────────────────────────────────────────
+// ─── Surah List Item ──────────────────────────────────────────────────────────────────────────────
 interface SurahItemProps {
-  surah: Surah;
+  surah: SurahMeta;
   isActive: boolean;
   index: number;
   onClick: () => void;
@@ -303,23 +307,23 @@ function SurahItem({ surah, isActive, index, onClick }: SurahItemProps) {
       type="button"
       data-ocid={`surah.item.${index}`}
       onClick={onClick}
-      className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors border-l-4 ${
+      className={`w-full text-left px-3 py-2 flex items-center gap-2 transition-colors border-l-4 ${
         isActive
           ? "bg-quran-sidebar-active border-l-primary"
           : "border-l-transparent hover:bg-accent"
       }`}
     >
       <span
-        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+        className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs ${
           isActive
             ? "bg-primary text-primary-foreground"
             : "bg-muted text-muted-foreground"
         }`}
       >
-        {Number(surah.number)}
+        {surah.number}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="font-arabic text-base leading-tight text-foreground">
+        <p className="font-arabic text-sm leading-tight text-foreground">
           {surah.arabicName}
         </p>
         <p className="text-xs text-muted-foreground truncate">
@@ -327,13 +331,13 @@ function SurahItem({ surah, isActive, index, onClick }: SurahItemProps) {
         </p>
       </div>
       <span className="text-xs text-muted-foreground flex-shrink-0">
-        {Number(surah.ayahCount)}
+        {surah.ayahCount}
       </span>
     </button>
   );
 }
 
-// ─── Ayah Card ────────────────────────────────────────────────────────────────
+// ─── Ayah Card ──────────────────────────────────────────────────────────────────────────────────
 interface AyahCardProps {
   ayah: Ayah;
   isActive: boolean;
@@ -397,19 +401,19 @@ function AyahCard({ ayah, isActive, index }: AyahCardProps) {
   );
 }
 
-// ─── Main App Content ─────────────────────────────────────────────────────────
+// ─── Main App Content ─────────────────────────────────────────────────────────────────────────────
 function AppContent() {
   const [selectedSurahNum, setSelectedSurahNum] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeAyahNum, setActiveAyahNum] = useState(1);
 
-  const { data: surahs = [], isLoading: surahsLoading } = useGetAllSurahs();
+  const surahs = SURAHS;
+  const surahsLoading = false;
+
   const { data: ayahs = [], isLoading: ayahsLoading } =
     useGetAyahsForSurah(selectedSurahNum);
 
-  const selectedSurah = surahs.find(
-    (s) => Number(s.number) === selectedSurahNum,
-  );
+  const selectedSurah = surahs.find((s) => s.number === selectedSurahNum);
 
   const filteredSurahs = surahs.filter(
     (s) =>
@@ -417,7 +421,7 @@ function AppContent() {
       s.transliteration.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.arabicName.includes(searchQuery) ||
       s.urduName.includes(searchQuery) ||
-      String(Number(s.number)).includes(searchQuery),
+      String(s.number).includes(searchQuery),
   );
 
   const audioUrl = SURAH_AUDIO_URLS[selectedSurahNum] ?? SURAH_AUDIO_URLS[1];
@@ -490,57 +494,52 @@ function AppContent() {
       {/* Two-column layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-72 flex-shrink-0 bg-card border-r border-border flex flex-col">
+        <aside className="w-56 flex-shrink-0 bg-card border-r border-border flex flex-col">
           {/* Search */}
           <div className="p-3 border-b border-border">
-            <div className="relative">
-              <Search
-                size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <Input
-                data-ocid="surah.search_input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search surahs..."
-                className="pl-9 h-9 text-sm bg-background"
-              />
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                  data-ocid="surah.search_input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search surahs..."
+                  className="pl-9 h-8 text-xs bg-background"
+                />
+              </div>
+              <p className="flex-shrink-0 text-xs text-muted-foreground whitespace-nowrap">
+                {surahsLoading
+                  ? "Loading..."
+                  : `${filteredSurahs.length} Surahs`}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground mt-2 px-1">
-              {surahsLoading ? "Loading..." : `${filteredSurahs.length} Surahs`}
-            </p>
           </div>
 
           {/* Surah list */}
           <ScrollArea className="flex-1">
-            {surahsLoading ? (
-              <div className="p-3 space-y-2" data-ocid="surah.loading_state">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: skeleton list
-                  <Skeleton key={i} className="h-14 w-full rounded-lg" />
-                ))}
-              </div>
-            ) : (
-              <div>
-                {filteredSurahs.map((surah, idx) => (
-                  <SurahItem
-                    key={Number(surah.number)}
-                    surah={surah}
-                    isActive={Number(surah.number) === selectedSurahNum}
-                    index={idx + 1}
-                    onClick={() => handleSelectSurah(Number(surah.number))}
-                  />
-                ))}
-                {filteredSurahs.length === 0 && (
-                  <div
-                    data-ocid="surah.empty_state"
-                    className="p-6 text-center text-muted-foreground text-sm"
-                  >
-                    No surahs found
-                  </div>
-                )}
-              </div>
-            )}
+            <div>
+              {filteredSurahs.map((surah, idx) => (
+                <SurahItem
+                  key={surah.number}
+                  surah={surah}
+                  isActive={surah.number === selectedSurahNum}
+                  index={idx + 1}
+                  onClick={() => handleSelectSurah(surah.number)}
+                />
+              ))}
+              {filteredSurahs.length === 0 && (
+                <div
+                  data-ocid="surah.empty_state"
+                  className="p-6 text-center text-muted-foreground text-sm"
+                >
+                  No surahs found
+                </div>
+              )}
+            </div>
           </ScrollArea>
         </aside>
 
@@ -562,8 +561,8 @@ function AppContent() {
                 {selectedSurah.arabicName}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                {selectedSurah.transliteration} ·{" "}
-                {Number(selectedSurah.ayahCount)} Ayahs
+                {selectedSurah.transliteration} · {selectedSurah.ayahCount}{" "}
+                Ayahs
               </p>
               <p
                 className="font-urdu text-lg text-muted-foreground mt-1"
@@ -630,8 +629,8 @@ function AppContent() {
           </div>
           <div className="border-t border-white/10 pt-3">
             <p className="text-center text-white/50 text-xs">
-              © 2026 Noor-ul-Quran | Powered by Nellore Print Hub Magic
-              Advertising
+              © {new Date().getFullYear()} Noor-ul-Quran | Powered by Nellore
+              Print Hub Magic Advertising
             </p>
             <p className="text-center text-white/60 text-xs mt-1">
               Website Created by: Shaik Munwar Basha | Contact: 9390535070
