@@ -11,7 +11,6 @@ import { useGetAyahsForSurah } from "./hooks/useQuranApi";
 
 const queryClient = new QueryClient();
 
-// Use SurahMeta shape compatible with the UI
 type SurahMeta = (typeof SURAHS)[0];
 
 const SURAH_AUDIO_URLS: Record<number, string> = {
@@ -144,6 +143,7 @@ interface AudioPlayerProps {
   surahName: string;
   ayahs: Ayah[];
   onActiveAyah: (n: number) => void;
+  onSurahEnded: () => void;
 }
 
 function AudioPlayer({
@@ -151,18 +151,31 @@ function AudioPlayer({
   surahName,
   ayahs,
   onActiveAyah,
+  onSurahEnded,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const shouldAutoPlayRef = useRef<boolean>(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
 
+  // Auto-play when audioUrl changes (next surah)
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on audioUrl change
   useEffect(() => {
-    setIsPlaying(false);
+    const audio = audioRef.current;
+    if (!audio) return;
     setCurrentTime(0);
     setDuration(0);
+    // If auto-advance was triggered, keep playing
+    if (shouldAutoPlayRef.current) {
+      shouldAutoPlayRef.current = false;
+      audio.load();
+      audio.play().catch(() => setIsPlaying(false));
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(false);
+    }
   }, [audioUrl]);
 
   const handleTimeUpdate = useCallback(() => {
@@ -171,26 +184,47 @@ function AudioPlayer({
     const t = audio.currentTime;
     setCurrentTime(t);
     if (ayahs.length === 0) return;
+
+    // Fix: if no ayah has real timing data, distribute evenly by audio progress
+    const hasTimingData = ayahs.some((a) => Number(a.startingTime) > 0);
     let activeIdx = 0;
-    for (let i = 0; i < ayahs.length; i++) {
-      if (t >= Number(ayahs[i].startingTime)) {
-        activeIdx = i;
-      } else {
-        break;
+    if (hasTimingData) {
+      for (let i = 0; i < ayahs.length; i++) {
+        if (t >= Number(ayahs[i].startingTime)) {
+          activeIdx = i;
+        } else {
+          break;
+        }
+      }
+    } else {
+      const dur = audio.duration;
+      if (dur && dur > 0) {
+        activeIdx = Math.min(
+          Math.floor((t / dur) * ayahs.length),
+          ayahs.length - 1,
+        );
       }
     }
+
     onActiveAyah(Number(ayahs[activeIdx].number));
   }, [ayahs, onActiveAyah]);
+
+  const handleEnded = useCallback(() => {
+    shouldAutoPlayRef.current = true;
+    setIsPlaying(false);
+    onSurahEnded();
+  }, [onSurahEnded]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
     if (isPlaying) {
       audio.pause();
+      setIsPlaying(false);
     } else {
-      audio.play();
+      audio.play().catch(() => setIsPlaying(false));
+      setIsPlaying(true);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,7 +254,7 @@ function AudioPlayer({
         src={audioUrl}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={() => setDuration(audioRef.current?.duration ?? 0)}
-        onEnded={() => setIsPlaying(false)}
+        onEnded={handleEnded}
       />
 
       {/* Play/Pause */}
@@ -344,16 +378,32 @@ interface AyahCardProps {
   ayah: Ayah;
   isActive: boolean;
   index: number;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
 }
 
-function AyahCard({ ayah, isActive, index }: AyahCardProps) {
+function AyahCard({
+  ayah,
+  isActive,
+  index,
+  scrollContainerRef,
+}: AyahCardProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isActive && ref.current) {
-      ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (!isActive || !ref.current) return;
+    const el = ref.current;
+    const viewport = scrollContainerRef.current;
+    if (viewport) {
+      // Scroll inside the ScrollArea viewport
+      const elTop = el.offsetTop;
+      const elHeight = el.offsetHeight;
+      const vpHeight = viewport.clientHeight;
+      const target = elTop - vpHeight / 2 + elHeight / 2;
+      viewport.scrollTo({ top: target, behavior: "smooth" });
+    } else {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [isActive]);
+  }, [isActive, scrollContainerRef]);
 
   return (
     <motion.div
@@ -368,7 +418,7 @@ function AyahCard({ ayah, isActive, index }: AyahCardProps) {
       }`}
     >
       <div className="px-4 py-3">
-        {/* Header row: ayah number badge left-aligned */}
+        {/* Header row: ayah number badge */}
         <div className="flex items-center justify-between mb-2">
           <span
             className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
@@ -389,7 +439,7 @@ function AyahCard({ ayah, isActive, index }: AyahCardProps) {
         {/* Arabic text */}
         <p
           className="font-arabic text-right text-foreground mb-2"
-          style={{ fontSize: "1.1rem", lineHeight: "2rem" }}
+          style={{ fontSize: "1.25rem", lineHeight: "2.2rem" }}
           dir="rtl"
         >
           {ayah.arabicText}
@@ -420,6 +470,8 @@ function AppContent() {
   const [selectedSurahNum, setSelectedSurahNum] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeAyahNum, setActiveAyahNum] = useState(1);
+  // Ref to the ScrollArea's inner viewport so AyahCard can scroll it
+  const ayahScrollViewportRef = useRef<HTMLDivElement | null>(null);
 
   const surahs = SURAHS;
   const surahsLoading = false;
@@ -443,7 +495,33 @@ function AppContent() {
   const handleSelectSurah = (num: number) => {
     setSelectedSurahNum(num);
     setActiveAyahNum(1);
+    // Scroll reading area back to top
+    if (ayahScrollViewportRef.current) {
+      ayahScrollViewportRef.current.scrollTo({ top: 0 });
+    }
   };
+
+  // Auto-advance to next surah when current one ends
+  const handleSurahEnded = useCallback(() => {
+    setSelectedSurahNum((prev) => {
+      const next = prev < 114 ? prev + 1 : 1;
+      setActiveAyahNum(1);
+      if (ayahScrollViewportRef.current) {
+        ayahScrollViewportRef.current.scrollTo({ top: 0 });
+      }
+      return next;
+    });
+  }, []);
+
+  // Capture the Radix ScrollArea viewport element after mount
+  const ayahScrollAreaRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    // Radix ScrollArea renders the scrollable viewport with this attribute
+    const viewport = node.querySelector<HTMLDivElement>(
+      "[data-radix-scroll-area-viewport]",
+    );
+    ayahScrollViewportRef.current = viewport ?? null;
+  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -502,6 +580,7 @@ function AppContent() {
           }
           ayahs={ayahs}
           onActiveAyah={setActiveAyahNum}
+          onSurahEnded={handleSurahEnded}
         />
       </div>
 
@@ -586,46 +665,49 @@ function AppContent() {
           )}
 
           {/* Ayahs */}
-          <ScrollArea className="flex-1">
-            <div className="px-4 py-4 space-y-3 max-w-2xl mx-auto">
-              {ayahsLoading ? (
-                <div data-ocid="ayah.loading_state" className="space-y-3">
-                  {Array.from({ length: 7 }).map((_, i) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: skeleton list
-                    <Skeleton key={i} className="h-32 w-full rounded-lg" />
-                  ))}
-                </div>
-              ) : (
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={selectedSurahNum}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-3"
-                  >
-                    {ayahs.map((ayah, idx) => (
-                      <AyahCard
-                        key={Number(ayah.number)}
-                        ayah={ayah}
-                        isActive={Number(ayah.number) === activeAyahNum}
-                        index={idx + 1}
-                      />
+          <div ref={ayahScrollAreaRef} className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="px-4 py-4 space-y-3 max-w-2xl mx-auto">
+                {ayahsLoading ? (
+                  <div data-ocid="ayah.loading_state" className="space-y-3">
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: skeleton list
+                      <Skeleton key={i} className="h-32 w-full rounded-lg" />
                     ))}
-                    {ayahs.length === 0 && (
-                      <div
-                        data-ocid="ayah.empty_state"
-                        className="text-center text-muted-foreground py-16 text-sm"
-                      >
-                        No ayahs found
-                      </div>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-              )}
-            </div>
-          </ScrollArea>
+                  </div>
+                ) : (
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={selectedSurahNum}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-3"
+                    >
+                      {ayahs.map((ayah, idx) => (
+                        <AyahCard
+                          key={Number(ayah.number)}
+                          ayah={ayah}
+                          isActive={Number(ayah.number) === activeAyahNum}
+                          index={idx + 1}
+                          scrollContainerRef={ayahScrollViewportRef}
+                        />
+                      ))}
+                      {ayahs.length === 0 && (
+                        <div
+                          data-ocid="ayah.empty_state"
+                          className="text-center text-muted-foreground py-16 text-sm"
+                        >
+                          No ayahs found
+                        </div>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
         </main>
       </div>
 
@@ -647,7 +729,7 @@ function AppContent() {
               Print Hub Magic Advertising
             </p>
             <p className="text-center text-white/60 text-xs mt-1">
-              Website Created by: Shaik Munwar Basha | Contact: 9390535070
+              Website Created by: Shaik Munwar Basha
             </p>
             <p className="text-center text-white/30 text-xs mt-1">
               Built with love using{" "}
